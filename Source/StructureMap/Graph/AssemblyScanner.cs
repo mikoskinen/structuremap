@@ -205,6 +205,11 @@ namespace StructureMap.Graph
 
         public void AssembliesFromPath(string path, Predicate<Assembly> assemblyFilter)
         {
+            AssembliesFromPath(path, assemblyFilter, false);
+        }
+
+        public void AssembliesFromPath(string path, Predicate<Assembly> assemblyFilter, bool loadWithoutLocking)
+        {
             IEnumerable<string> assemblyPaths = Directory.GetFiles(path)
                 .Where(file =>
                        Path.GetExtension(file).Equals(
@@ -218,15 +223,48 @@ namespace StructureMap.Graph
             foreach (string assemblyPath in assemblyPaths)
             {
                 Assembly assembly = null;
-                try
-                {
-                    assembly = System.Reflection.Assembly.LoadFrom(assemblyPath);
-                }
-                catch
-                {
-                }
-                if (assembly != null && assemblyFilter(assembly)) Assembly(assembly);
+
+                assembly = loadWithoutLocking ? LoadAssemblyWithoutLocking(assemblyPath) : LoadAssembly(assemblyPath);
+
+                if (assemblyFilter == null)
+                    Assembly(assembly);
+                else if (assembly != null && assemblyFilter(assembly)) Assembly(assembly);
             }
+        }
+
+        private Assembly LoadAssembly(string assemblyPath)
+        {
+            Assembly assembly = null;
+            try
+            {
+                assembly = System.Reflection.Assembly.LoadFrom(assemblyPath);
+            }
+            catch
+            {
+            }
+
+            return assembly;
+        }
+
+        private Assembly LoadAssemblyWithoutLocking(string assemblyPath)
+        {
+            Assembly assembly = null;
+            try
+            {
+                byte[] assemStream = null;
+                using (FileStream fs = new FileStream(assemblyPath, FileMode.Open))
+                {
+                    assemStream = new byte[fs.Length];
+                    fs.Read(assemStream, 0, (int)fs.Length);
+                }
+
+                assembly = System.Reflection.Assembly.Load(assemStream);
+            }
+            catch
+            {
+            }
+
+            return assembly;
         }
 
         public void With(IRegistrationConvention convention)
