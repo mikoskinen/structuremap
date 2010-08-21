@@ -54,6 +54,17 @@ namespace StructureMap.Graph
         void AssembliesFromPath(string path, Predicate<Assembly> assemblyFilter);
 
         /// <summary>
+        /// Sweep the designated path and add any Assembly's found in this folder to the
+        /// scanning operation.  The assemblyFilter can be used to filter or limit the 
+        /// Assembly's that are picked up. Setting loadWithoutLocking to true loads
+        /// the assemblies without locking them. 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="assemblyFilter"></param>
+        /// <param name="loadWithoutLocking"></param>
+        void AssembliesFromPath(string path, Predicate<Assembly> assemblyFilter, bool loadWithoutLocking);
+
+        /// <summary>
         /// Sweep the application base directory of current app domain and add any Assembly's 
         /// found to the scanning operation.
         /// </summary>
